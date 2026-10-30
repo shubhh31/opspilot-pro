@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpsPilot Pro - SAP Operational Intelligence</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo-icon">🚀</div>
+                <div class="brand-text">
+                    <h1>OpsPilot Pro</h1>
+                    <span>SAP Operational Intel</span>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="dashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Command Center</span>
+                </button>
+                <button class="nav-item" data-tab="scanner">
+                    <i data-lucide="file-spreadsheet"></i>
+                    <span>Excel Scanner</span>
+                </button>
+                <button class="nav-item" data-tab="tracker">
+                    <i data-lucide="list-todo"></i>
+                    <span>Task Control</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="ai-status-card">
+                    <div class="status-indicator online" id="aiStatusIndicator"></div>
+                    <div class="status-info">
+                        <p class="status-title">Gemini AI Engine</p>
+                        <p class="status-desc" id="aiStatusDesc">Connecting...</p>
+                    </div>
+                </div>
+                <button class="btn btn-secondary btn-sm" id="btnResetDB" style="width: 100%; margin-top: 10px;">
+                    <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i> Reset Mock Data
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Body -->
+        <main class="main-content">
+            <!-- Top Navbar -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <h2 id="pageTitle">Operational Dashboard</h2>
+                    <p class="text-muted">Real-time workflow monitoring and delay analytics</p>
+                </div>
+                <div class="navbar-right">
+                    <button class="btn btn-primary btn-icon-text" id="btnOpenCopilot">
+                        <i data-lucide="bot"></i>
+                        <span>OpsPilot Copilot</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-container">
+                <!-- TAB 1: DASHBOARD -->
+                <section class="tab-pane active" id="tab-dashboard">
+                    <!-- Metrics Cards Grid -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-icon bg-blue-glow">
+                                <i data-lucide="layers"></i>
+                            </div>
+                            <div class="metric-data">
+                                <span class="metric-label">Total Workflows</span>
+                                <h3 class="metric-value" id="valTotalTasks">-</h3>
+                            </div>
+                        </div>
+                        <div class="metric-card alert-pulse">
+                            <div class="metric-icon bg-red-glow">
+                                <i data-lucide="alert-triangle"></i>
+                            </div>
+                            <div class="metric-data">
+                                <span class="metric-label">Delayed Approvals</span>
+                                <h3 class="metric-value text-danger" id="valDelayedTasks">-</h3>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon bg-purple-glow">
+                                <i data-lucide="indian-rupee"></i>
+                            </div>
+                            <div class="metric-data">
+                                <span class="metric-label">At-Risk Value</span>
+                                <h3 class="metric-value text-purple" id="valDelayedValue">₹-</h3>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-icon bg-green-glow">
+                                <i data-lucide="check-circle2"></i>
+                            </div>
+                            <div class="metric-data">
+                                <span class="metric-label">Approved Tasks</span>
+                                <h3 class="metric-value text-success" id="valApprovedTasks">-</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Double Column Layout -->
+                    <div class="dashboard-row">
+                        <!-- AI Insights Report -->
+                        <div class="dashboard-col col-7 glass-panel">
+                            <div class="panel-header">
+                                <h3>🤖 AI-Powered Executive Summary</h3>
+                                <button class="btn btn-sm btn-secondary" id="btnRefreshSummary">
+                                    <i data-lucide="refresh-cw"></i> Regenerate
+                                </button>
+                            </div>
+                            <div class="panel-body font-outfit" id="aiSummaryContent">
+                                <div class="loading-state">
+                                    <div class="spinner"></div>
+                                    <p>AI is parsing live database workflows...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Department Bottleneck list -->
+                        <div class="dashboard-col col-5 glass-panel">
+                            <div class="panel-header">
+                                <h3>⚠️ Department Risk Factors</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="bottleneck-list" id="bottleneckList">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Third row: Charts -->
+                    <div class="dashboard-row">
+                        <div class="dashboard-col col-6 glass-panel">
+                            <div class="panel-header">
+                                <h3>📊 Department Volume & Value</h3>
+                            </div>
+                            <div class="panel-body chart-container">
+                                <canvas id="chartDept"></canvas>
+                            </div>
+                        </div>
+                        <div class="dashboard-col col-6 glass-panel">
+                            <div class="panel-header">
+                                <h3>🚨 Priority Index</h3>
+                            </div>
+                            <div class="panel-body chart-container">
+                                <canvas id="chartPriority"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 2: EXCEL SCANNER -->
+                <section class="tab-pane" id="tab-scanner">
+                    <div class="scanner-layout">
+                        <!-- Left pane: Uploader and data grid -->
+                        <div class="scanner-left glass-panel">
+                            <div class="panel-header">
+                                <h3>📁 Upload SAP Export File</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="upload-dropzone" id="dropzone">
+                                    <i data-lucide="upload-cloud" class="upload-icon"></i>
+                                    <p class="upload-text">Drag and drop your SAP export Excel (.xlsx) or CSV file here</p>
+                                    <span class="upload-subtext">Supports PO, SO, and Transaction tables</span>
+                                    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden-input">
+                                    <button class="btn btn-primary" id="btnBrowse">Browse Files</button>
+                                </div>
+
+                                <div class="scanner-results-container hidden" id="scannerResults">
+                                    <div class="scan-meta-strip">
+                                        <div class="meta-item">
+                                            <span class="meta-label">File Scanned:</span>
+                                            <span class="meta-val" id="scanFilename">-</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <span class="meta-label">Total Rows:</span>
+                                            <span class="meta-val" id="scanTotalRows">-</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <span class="meta-label text-danger">Errors:</span>
+                                            <span class="meta-val text-danger" id="scanErrors">-</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <span class="meta-label text-warning">Warnings:</span>
+                                            <span class="meta-val text-warning" id="scanWarnings">-</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid-scroll-wrapper">
+                                        <table class="excel-data-grid" id="excelGrid">
+                                            <thead>
+                                                <!-- Dynamic headers -->
+                                            </thead>
+                                            <tbody>
+                                                <!-- Dynamic rows -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right pane: Data quality AI recommendations -->
+                        <div class="scanner-right glass-panel">
+                            <div class="panel-header">
+                                <h3>🛡️ SAP Quality Audit Note</h3>
+                            </div>
+                            <div class="panel-body" id="scanAiReport">
+                                <div class="empty-state">
+                                    <i data-lucide="shield-check" class="empty-state-icon"></i>
+                                    <p>Upload a file to run the AI compliance scanner and see downstream ERP validation checks.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 3: TASK CONTROL (TRACKER) -->
+                <section class="tab-pane" id="tab-tracker">
+                    <div class="tracker-layout glass-panel">
+                        <div class="panel-header">
+                            <div class="header-left">
+                                <h3>📋 Workflow Operations Ledger</h3>
+                            </div>
+                            <div class="header-right flex-gap">
+                                <select class="form-control select-sm" id="filterDept">
+                                    <option value="All">All Departments</option>
+                                    <option value="Procurement">Procurement</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Warehouse">Warehouse</option>
+                                    <option value="Legal">Legal</option>
+                                </select>
+                                <select class="form-control select-sm" id="filterPriority">
+                                    <option value="All">All Priorities</option>
+                                    <option value="Critical">Critical</option>
+                                    <option value="High">High</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                                <button class="btn btn-primary btn-sm" id="btnAddTask">
+                                    <i data-lucide="plus"></i> Add task
+                                </button>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="table-scroll-wrapper">
+                                <table class="tracker-table" id="trackerTable">
+                                    <thead>
+                                        <tr>
+                                            <th>SAP Document</th>
+                                            <th>Workflow Description</th>
+                                            <th>Department</th>
+                                            <th>Assigned Owner</th>
+                                            <th>Priority</th>
+                                            <th>Amount</th>
+                                            <th>Due Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Right Side AI Copilot sliding drawer -->
+        <aside class="copilot-drawer" id="copilotDrawer">
+            <div class="drawer-header">
+                <div class="copilot-title">
+                    <i data-lucide="bot" class="text-cyan-glow"></i>
+                    <div>
+                        <h4>OpsPilot Copilot</h4>
+                        <span>SAP AI Assistant</span>
+                    </div>
+                </div>
+                <button class="btn-close" id="btnCloseCopilot">&times;</button>
+            </div>
+            <div class="drawer-messages" id="chatMessages">
+                <!-- Chat messages load here -->
+            </div>
+            <div class="drawer-footer">
+                <form id="chatForm">
+                    <input type="text" class="form-control" id="chatInput" placeholder="Ask about SAP bottlenecks or tasks..." autocomplete="off">
+                    <button class="btn btn-primary" type="submit">
+                        <i data-lucide="send"></i>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Task Audit Trail Modal Drawer (Right slide) -->
+        <div class="audit-drawer" id="auditDrawer">
+            <div class="drawer-header">
+                <h4>🔍 Audit Trail & Lifecycle</h4>
+                <button class="btn-close" id="btnCloseAudit">&times;</button>
+            </div>
+            <div class="drawer-body">
+                <div class="audit-task-summary">
+                    <h3 id="auditTaskTitle">-</h3>
+                    <p class="text-muted" id="auditTaskSapId">-</p>
+                    <div class="meta-strip-vertical">
+                        <div><strong>Value:</strong> <span id="auditTaskVal">-</span></div>
+                        <div><strong>Owner:</strong> <span id="auditTaskOwner">-</span></div>
+                        <div><strong>SLA Due Date:</strong> <span id="auditTaskDue">-</span></div>
+                    </div>
+                    <div class="audit-delay-alert hidden" id="auditDelayAlert">
+                        <h5>⚠️ Delay Escalation Warning</h5>
+                        <p id="auditDelayReason">-</p>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <h4>📜 Change Log Ledger</h4>
+                <div class="audit-timeline" id="auditTimeline">
+                    <!-- Audit history events populate here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Task Dialog Modal -->
+        <div class="modal-backdrop hidden" id="addTaskModal">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3>➕ Initiate SAP Process Workflow</h3>
+                    <button class="btn-close" id="btnCloseTaskModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="addTaskForm">
+                        <div class="form-group">
+                            <label for="taskSapId">SAP Document ID (Optional)</label>
+                            <input type="text" class="form-control" id="taskSapId" placeholder="e.g. PO-4500109000">
+                        </div>
+                        <div class="form-group">
+                            <label for="taskTitle">Workflow Title *</label>
+                            <input type="text" class="form-control" id="taskTitle" placeholder="Brief descriptive title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="taskDesc">Detailed Description</label>
+                            <textarea class="form-control" id="taskDesc" placeholder="Enter process context, line items, vendors..." rows="3"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-6">
+                                <label for="taskDept">Department *</label>
+                                <select class="form-control" id="taskDept" required>
+                                    <option value="Procurement">Procurement</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Warehouse">Warehouse</option>
+                                    <option value="Legal">Legal</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-6">
+                                <label for="taskPriority">Priority *</label>
+                                <select class="form-control" id="taskPriority" required>
+                                    <option value="Low">Low</option>
+                                    <option value="Medium" selected>Medium</option>
+                                    <option value="High">High</option>
+                                    <option value="Critical">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-6">
+                                <label for="taskAmount">Amount (INR) *</label>
+                                <input type="number" class="form-control" id="taskAmount" value="0.00" step="0.01" required>
+                            </div>
+
+                            <div class="form-group col-6">
+                                <label for="taskDueDate">SLA Due Date *</label>
+                                <input type="date" class="form-control" id="taskDueDate" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="taskAssignee">Assigned Lead / Role *</label>
+                            <input type="text" class="form-control" id="taskAssignee" placeholder="Person responsible" required>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" type="button" id="btnCancelTask">Cancel</button>
+                            <button class="btn btn-primary" type="submit">Deploy Workflow</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delay Cause Modal -->
+        <div class="modal-backdrop hidden" id="delayModal">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-header">
+                    <h3>⚠️ Escalation Details</h3>
+                    <button class="btn-close" id="btnCloseDelayModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="delayForm">
+                        <input type="hidden" id="delayTaskId">
+                        <div class="form-group">
+                            <label for="delayReason">State the reason for workflow delay *</label>
+                            <textarea class="form-control" id="delayReason" placeholder="Enter reason (e.g. GR/IR mismatch, blocked by legal NDA review...)" rows="4" required></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" type="button" id="btnCancelDelay">Cancel</button>
+                            <button class="btn btn-danger" type="submit">Escalate & Delay</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Custom Application Script -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
+
